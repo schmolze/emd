@@ -1,0 +1,12 @@
+
+test.R
+
+test.RData
+
+R/.Rhistory
+
+*.Rproj.*
+
+.Rbuildignore
+
+.Rhistory

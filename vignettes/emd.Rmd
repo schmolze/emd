@@ -1,0 +1,19 @@
+---
+title: "EMD Vignette"
+author: "Daniel Schmolze"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    fig_width: 7
+    fig_height: 5
+vignette: >
+  %\VignetteIndexEntry{EMD Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+---
+# Welcome
+
+Welcome to the **emd** package! This vignette will...
+
+
