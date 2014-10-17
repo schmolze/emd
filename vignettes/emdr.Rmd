@@ -1,5 +1,5 @@
 ---
-title: "EMD Vignette"
+title: "emdr Vignette"
 author: "Daniel Schmolze"
 date: "`r Sys.Date()`"
 output: 
@@ -7,13 +7,13 @@ output:
     fig_width: 7
     fig_height: 5
 vignette: >
-  %\VignetteIndexEntry{EMD Vignette}
+  %\VignetteIndexEntry{emdr Vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
 ---
 # Welcome
 
-Welcome to the **emd** package! This vignette will...
+Welcome to the **emdr** package! This vignette will...
 
 

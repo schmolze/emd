@@ -8,7 +8,7 @@
 #' @import BiocParallel
 #' @import matrixStats
 #' @references ref to paper goes here...
-#' @name emd-package
+#' @name emdr-package
 #' @docType package
 NULL
 
