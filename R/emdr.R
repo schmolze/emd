@@ -1,5 +1,5 @@
 #' Implements the Earth Mover's Distance algorithm for analyzing
-#' differential expression in heterogenous data sets.
+#' differential expression between heterogenous data sets.
 #'
 #' \code{\link{calculateEMD}} will usually be the only function needed.
 #'
@@ -7,23 +7,27 @@
 #' @import emdist
 #' @import BiocParallel
 #' @import matrixStats
+#' @import ggplot2
 #' @references ref to paper goes here...
 #' @name emdr-package
 #' @docType package
 NULL
 
 # inputs
-# 1) expression df: row names = sample names, column names = gene names,
+# 1) expression matrix: row names = gene names, column names = sample names,
 #    values = expression levels
 #
 # 2) samples A: vector of sample names
 # 3) samples B: vector of sample names
 # 4) bin size: number
 
+# return:
+# table of genes w/emd score, fc, q-value
+# table of genes w/permuted emd scores
 
 #' @export
-#' @title Compute Earth Mover's Distance
-#' @description This is the main user interface to the \pkg{emd} package, and is
+#' @title Earth Mover's Distance for differential expression analysis
+#' @description This is the main user interface to the \pkg{emdr} package, and is
 #' usually the only function needed.
 #' @details details go here
 #' @param expressionData foo
@@ -32,10 +36,23 @@ NULL
 #' @examples
 #' foo <- 1
 #' @seealso \code{\link[emdist]{emd2d}}
-calculateEMDfoo <- function(expressionData, samplesA, samplesB,
-                         binSize=0.2, nperm=1000, verbose=TRUE) {
+calculateEMDfoo <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
+                            binSize=0.2, nperm=100, stepSize=0.001,
+                            verbose=TRUE) {
 
+  # seperate expression matrices provided
+  if (is.na(expM)) {
+
+    samplesA <- colnames(expM1)
+    samplesB <- colnames(expM2)
+    expM <- cbind(expM1, expM2)
+
+  }
+
+  # transpose and coerce to df (for bplapply)
+  expressionData <- as.data.frame(t(expM))
   sample_names <- rownames(expressionData)
+
   idxA <- match(samplesA, sample_names)
   idxB <- match(samplesB, sample_names)
 
@@ -54,9 +71,23 @@ calculateEMDfoo <- function(expressionData, samplesA, samplesB,
     densA <- as.matrix(histA$density)
     densB <- as.matrix(histB$density)
 
-    return(emdist::emd2d(densA, densB))
+    emdist::emd2d(densA, densB)
 
   }
+
+  # computes log2 fold change
+  fc <- function(geneData, idxA, idxB) {
+
+    dataA <- geneData[idxA]
+    dataB <- geneData[idxB]
+
+    meanA <- mean(dataA)
+    meanB <- mean(dataB)
+
+    log2(2^meanA/2^meanB)
+  }
+
+  ## emd
 
   # calculate emd for each gene
   if (verbose)
@@ -64,17 +95,36 @@ calculateEMDfoo <- function(expressionData, samplesA, samplesB,
 
   emd <- unlist(BiocParallel::bplapply(expressionData, emd_gene,
                                        idxA, idxB))
-  emd <- as.data.frame(emd)
+
+  emd <- as.matrix(emd)
+  colnames(emd) <- "emd"
 
   if (verbose)
     message("done.")
 
-  # emd for permuted data
+
+  ## fold change
+
+  if (verbose)
+    message("Calculated fold change...", appendLF=FALSE)
+
+  fc <- unlist(BiocParallel::bplapply(expressionData, fc, idxA, idxB))
+
+  fc <- as.matrix(fc)
+  colnames(fc) <- "fc"
+
+  if (verbose)
+    message("done.")
+
+
+  ## emd for permuted data
+
   sample_count <- length(samplesA)+length(samplesB)
 
   # matrix to hold permuted emd values
   emd.perm <- matrix(nrow=ncol(expressionData), ncol=nperm)
   rownames(emd.perm) <- colnames(expressionData)
+  colnames(emd.perm) <- as.character(1:nperm)
 
   for (i in 1:nperm) {
 
@@ -97,25 +147,7 @@ calculateEMDfoo <- function(expressionData, samplesA, samplesB,
 
   }
 
-  # p_random = proportion of random emds > real emd
-  prand <- function(emd.data) {
-
-    emd <- emd.data[1]
-    emd.perm <- emd.data[-1]
-    nperm <- length(emd.perm)
-
-    p_random <- sum(emd.perm > emd)/nperm
-
-    if (p_random == 0)
-      p_random <- 1/(nperm+1)
-
-    return(p_random)
-
-  }
-
-  #p_random <- apply(cbind(emd, emd.perm), 1, prand)
-
-  # calculate q-values
+  ## q-values
 
   if (verbose)
     message("Calculating q-values...", appendLF=FALSE)
@@ -123,7 +155,7 @@ calculateEMDfoo <- function(expressionData, samplesA, samplesB,
   perm.medians <- matrixStats::rowMedians(emd.perm)
 
   # generate thresholds and qval matrix
-  thr <- seq(3, 0, by = -0.001)
+  thr <- seq(3, 0, by = -stepSize)
   qvals <- matrix(1, nrow=nrow(emd), ncol=length(thr))
 
   colnames(qvals) <- thr
@@ -158,36 +190,7 @@ calculateEMDfoo <- function(expressionData, samplesA, samplesB,
   if (verbose)
     message("done.")
 
-  return(cbind(emd, emd.qval, emd.perm))
-
-}
-
-#' @export
-#' @title Compute Earth Mover's Distance for a single gene
-#' @description description..
-#' @details details...
-#' @param expressionData foo
-#' @return return...
-#' @examples
-#' foo <- 1
-#' @seealso \code{\link{calculateEMD}} \code{\link[emdist]{emd2d}}
-calculateGeneEMD <- function(geneData, idxA, idxB, binSize=0.2) {
-
-  dataA <- geneData[idxA]
-  dataB <- geneData[idxB]
-
-  bins <- seq(floor(min(c(dataA, dataB))),
-              ceiling(max(c(dataA, dataB))),
-              by=binSize )
-
-  histA <- hist(dataA, breaks=bins, plot=FALSE)
-  histB <- hist(dataB, breaks=bins, plot=FALSE)
-
-  densA <- as.matrix(histA$density)
-  densB <- as.matrix(histB$density)
-
-  emd <- emdist::emd2d(densA, densB)
-
-  return(list("emd"=emd, "histA"=histA, "histB"=histB))
+  list("emd"=cbind(emd, fc, emd.qval), "emd.perm"=emd.perm)
+  #return(cbind(emd, emd.qval, emd.perm))
 
 }
