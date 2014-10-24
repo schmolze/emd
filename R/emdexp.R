@@ -9,25 +9,14 @@
 #' @import matrixStats
 #' @import ggplot2
 #' @references ref to paper goes here...
-#' @name emdr-package
+#' @name emdexp-package
 #' @docType package
 NULL
 
-# inputs
-# 1) expression matrix: row names = gene names, column names = sample names,
-#    values = expression levels
-#
-# 2) samples A: vector of sample names
-# 3) samples B: vector of sample names
-# 4) bin size: number
-
-# return:
-# table of genes w/emd score, fc, q-value
-# table of genes w/permuted emd scores
 
 #' @export
 #' @title Earth Mover's Distance for differential expression analysis
-#' @description This is the main user interface to the \pkg{emdr} package, and is
+#' @description This is the main user interface to the \pkg{emdexp} package, and is
 #' usually the only function needed.
 #' @details details go here
 #' @param expressionData foo
@@ -36,7 +25,7 @@ NULL
 #' @examples
 #' foo <- 1
 #' @seealso \code{\link[emdist]{emd2d}}
-calculateEMDfoo <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
+calculateEMDExp <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
                             binSize=0.2, nperm=100, stepSize=0.001,
                             verbose=TRUE) {
 
@@ -56,6 +45,7 @@ calculateEMDfoo <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
   idxA <- match(samplesA, sample_names)
   idxB <- match(samplesB, sample_names)
 
+  # computes EMD score for a single gene
   emd_gene <- function(geneData, idxA, idxB) {
 
     dataA <- geneData[idxA]
@@ -106,7 +96,7 @@ calculateEMDfoo <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
   ## fold change
 
   if (verbose)
-    message("Calculated fold change...", appendLF=FALSE)
+    message("Calculating fold change...", appendLF=FALSE)
 
   fc <- unlist(BiocParallel::bplapply(expressionData, fc, idxA, idxB))
 
@@ -155,7 +145,9 @@ calculateEMDfoo <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
   perm.medians <- matrixStats::rowMedians(emd.perm)
 
   # generate thresholds and qval matrix
-  thr <- seq(3, 0, by = -stepSize)
+  thr_upper <- ceiling(max(emd))
+  #thr <- seq(3, 0, by = -stepSize)
+  thr <- seq(thr_upper, 0, by = -stepSize)
   qvals <- matrix(1, nrow=nrow(emd), ncol=length(thr))
 
   colnames(qvals) <- thr
@@ -190,7 +182,24 @@ calculateEMDfoo <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
   if (verbose)
     message("done.")
 
-  list("emd"=cbind(emd, fc, emd.qval), "emd.perm"=emd.perm)
-  #return(cbind(emd, emd.qval, emd.perm))
+  emd <- cbind(emd, fc, emd.qval)
+
+  EmdExp(expM, samplesA, samplesB, emd, emd.perm)
+  #list("emd"=cbind(emd, fc, emd.qval), "emd.perm"=emd.perm)
+
+}
+
+#' @export
+#' @title Create an EMD object
+#' @description description here
+#' @details details go here
+#' @param expressionData foo
+#' @return The function returns a list with the following elements:
+#' something...
+EmdExp <- function(expM, samplesA, samplesB, emd, emd.perm) {
+
+  structure(list("expM"=expM, "samplesA"=samplesA, "samplesB"=samplesB,
+                 "emd"=emd, "emd.perm"=emd.perm),
+            class = "emdexp")
 
 }

@@ -1,4 +1,4 @@
-Package: emdr
+Package: emdexp
 Title: Earth Mover's Distance
 Description: Description goes here...
 Version: 0.99.0
@@ -15,7 +15,8 @@ Depends:
 Imports:
     emdist,
     BiocParallel,
-    matrixStats
+    matrixStats,
+    ggplot2
 Suggests:
     knitr
 License: MIT + file LICENSE
