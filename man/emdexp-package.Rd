@@ -3,11 +3,11 @@
 \name{emdexp-package}
 \alias{emdexp-package}
 \title{Implements the Earth Mover's Distance algorithm for analyzing
-differential expression between heterogenous data sets.}
+differential expression of heterogenous data sets.}
 \description{
-\code{\link{calculateEMD}} will usually be the only function needed.
+\code{\link{calculate_emdexp}} will usually be the only function needed.
 }
 \references{
-ref to paper goes here...
+ref to paper goes here
 }
 

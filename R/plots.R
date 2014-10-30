@@ -1,25 +1,86 @@
-# plot 2: hist of emd.perm
+#' @export
+#' @title Plot null distribution of permuted emd scores vs. calculated emd
+#' scores.
+#' @description The median of the randomly permuted emd scores (i.e. the null
+#' distribution) is plotted on the x-axis, vs. the observed emd scores on the
+#' y-axis. The line \code{y=x} is superimposed.
+#' @param emdexp An \code{\link{emdexp}} object, typically returned via a call
+#' to \code{\link{calculate_emdexp}}.
+#' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
+#' not assigned, a plot will be drawn.
+#' @seealso \code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
+plot_emdnull <- function(emdexp) {
 
-# plot 3: row medians of emd.perm (x) vs emd (y)
+  emd <- emdexp$emd
+  emd.perm <- emdexp$emd.perm
+  rms <- rowMedians(emd.perm)
+
+  data <- as.data.frame(cbind(emd[,"emd",drop=FALSE], rms))
+
+  title <- "Null distribution vs. observed emd scores"
+
+  ggplot(data, aes(rms, emd)) + geom_point(alpha=0.3) +
+    geom_segment(x=0, y=0, xend=10, yend=10, colour="red") +
+    xlab("median of permuted emd scores")  +
+    ylab("observed emd scores") +
+    ggtitle(title) +
+    theme(axis.text=element_text(size=20),
+          axis.title=element_text(size=24),
+          plot.title =element_text(size=24))
+
+}
 
 
 #' @export
-#' @title Density plot
-#' @description description
-#' @details details
-#' @param emdExp blah
-#' @param geneName blah
-#' @return return value
-plotDensity <- function(emdExp, geneName) {
+#' @title Plot histogram of emd values calculated via random permutation.
+#' @description The permuted emd scores stored in \code{emdexp$emd.perm} are
+#' plotted as a histogram.
+#' @param emdexp An \code{\link{emdexp}} object, typically returned via a call
+#' to \code{\link{calculate_emdexp}}.
+#' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
+#' not assigned, a plot will be drawn.
+#' @seealso \code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
+plot_perms <- function(emdexp) {
 
-  expM <- emdExp$expM
-  samplesA <- emdExp$samplesA
-  samplesB <- emdExp$samplesB
+  emd.perm <- as.data.frame(emdexp$emd.perm)
 
-  emd_score <- emdExp$emd[geneName, "emd"]
+  colnames(emd.perm) <- "x"
 
-  dfA <- as.data.frame(expM[geneName, samplesA])
-  dfB <- as.data.frame(expM[geneName, samplesB])
+  title <- "Histogram of permuted emd scores"
+
+  ggplot(emd.perm, aes(x)) + geom_histogram(alpha=0.7) +
+    xlab("emd score")  + ggtitle(title) +
+    theme(axis.text=element_text(size=20),
+          axis.title=element_text(size=24),
+          plot.title =element_text(size=24))
+
+}
+
+
+#' @export
+#' @title Plot expression distributions and emd score for a gene.
+#' @description The expression data for the specified gene is retrieved from
+#' \code{emdexp$emd}. \code{emdexp$samplesA} and \code{emdexp$samplesB} are used
+#' to divide the data into two distributions, which are then visualized as
+#' density distributions. The calculated emd score for the specified gene is
+#' displayed in the plot title.
+#' @param emdexp An \code{\link{emdexp}} object, typically returned via a call
+#' to \code{\link{calculate_emdexp}}.
+#' @param gene_name The gene to visualize. The name should be defined as a row
+#' name in \code{emdexp$emd}.
+#' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
+#' not assigned, a plot will be drawn.
+#' @seealso \code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
+plot_density <- function(emdexp, gene_name) {
+
+  expM <- emdexp$expM
+  samplesA <- emdexp$samplesA
+  samplesB <- emdexp$samplesB
+
+  emd_score <- emdexp$emd[gene_name, "emd"]
+
+  dfA <- as.data.frame(expM[gene_name, samplesA])
+  dfB <- as.data.frame(expM[gene_name, samplesB])
 
   dfA$group <- "A"
   dfB$group <- "B"
@@ -29,12 +90,11 @@ plotDensity <- function(emdExp, geneName) {
 
   data <- rbind(dfA, dfB)
 
-  title <- paste(geneName, "\n", "(emd score = ",
+  title <- paste(gene_name, "\n", "(emd score = ",
                  round(emd_score, 2), ")", sep="")
 
   ggplot(data, aes(exp, fill=group)) + geom_density(alpha=0.5) +
     xlab("expression")  + ggtitle(title) +
-    theme_bw() +
     theme(axis.text=element_text(size=20),
           axis.title=element_text(size=24),
           plot.title =element_text(size=24),

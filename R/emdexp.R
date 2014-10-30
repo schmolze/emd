@@ -1,14 +1,14 @@
 #' Implements the Earth Mover's Distance algorithm for analyzing
-#' differential expression between heterogenous data sets.
+#' differential expression of heterogenous data sets.
 #'
-#' \code{\link{calculateEMD}} will usually be the only function needed.
+#' \code{\link{calculate_emdexp}} will usually be the only function needed.
 #'
 #'
 #' @import emdist
 #' @import BiocParallel
 #' @import matrixStats
 #' @import ggplot2
-#' @references ref to paper goes here...
+#' @references ref to paper goes here
 #' @name emdexp-package
 #' @docType package
 NULL
@@ -19,24 +19,25 @@ NULL
 #' @description This is the main user interface to the \pkg{emdexp} package, and is
 #' usually the only function needed.
 #' @details details go here
-#' @param expressionData foo
-#' @return The function returns a list with the following elements:
-#' something...
+#' @param expM A gene expression matrix. The rownames should contain gene
+#' identifiers, while the column names should contain sample identifiers.
+#' @param samplesA A vector of sample names identifying samples in \code{expM}
+#' that belong to "group A". The names must corresponding to column names
+#' in \code{expM}.
+#' @param samplesB A vector of sample names identifying samples in \code{expM}
+#' that belong to "group B". The names must corresponding to column names
+#' in \code{expM}.
+#' @param binSize The bin size to be used when generating histograms of
+#' gene expression levels for "group A" and "group B".
+#' @param nperm An integer specifying the number of randomly permuted EMD
+#' scores to be computed. Defaults to 100.
+#' @param verbose Boolean specifying whether to display progress messages.
+#' @return The function returns an \code{\link{emdexp}} object.
 #' @examples
 #' foo <- 1
-#' @seealso \code{\link[emdist]{emd2d}}
-calculateEMDExp <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
-                            binSize=0.2, nperm=100, stepSize=0.001,
-                            verbose=TRUE) {
-
-  # seperate expression matrices provided
-  if (is.na(expM)) {
-
-    samplesA <- colnames(expM1)
-    samplesB <- colnames(expM2)
-    expM <- cbind(expM1, expM2)
-
-  }
+#' @seealso \code{\link{emdexp}} \code{\link[emdist]{emd2d}}
+calculate_emdexp <- function(expM, samplesA, samplesB, binSize=0.2,
+                            nperm=100, verbose=TRUE) {
 
   # transpose and coerce to df (for bplapply)
   expressionData <- as.data.frame(t(expM))
@@ -146,8 +147,7 @@ calculateEMDExp <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
 
   # generate thresholds and qval matrix
   thr_upper <- ceiling(max(emd))
-  #thr <- seq(3, 0, by = -stepSize)
-  thr <- seq(thr_upper, 0, by = -stepSize)
+  thr <- seq(thr_upper, 0, by = -0.001)
   qvals <- matrix(1, nrow=nrow(emd), ncol=length(thr))
 
   colnames(qvals) <- thr
@@ -184,19 +184,38 @@ calculateEMDExp <- function(expM1, expM2, expM=NA, samplesA=NA, samplesB=NA,
 
   emd <- cbind(emd, fc, emd.qval)
 
-  EmdExp(expM, samplesA, samplesB, emd, emd.perm)
-  #list("emd"=cbind(emd, fc, emd.qval), "emd.perm"=emd.perm)
+  emdexp(expM, samplesA, samplesB, emd, emd.perm)
 
 }
 
 #' @export
-#' @title Create an EMD object
-#' @description description here
-#' @details details go here
-#' @param expressionData foo
-#' @return The function returns a list with the following elements:
-#' something...
-EmdExp <- function(expM, samplesA, samplesB, emd, emd.perm) {
+#' @title Create an emdexp object
+#' @description This is the constructor for objects of class 'emdexp'. It
+#' is used in \code{\link{calculate_emd}} to construct the return value.
+#' @param expM A gene expression matrix. The rownames should contain gene
+#' identifiers, while the column names should contain sample identifiers.
+#' @param samplesA A vector of sample names identifying samples in \code{expM}
+#' that belong to "group A". The names must corresponding to column names
+#' in \code{expM}.
+#' @param samplesB A vector of sample names identifying samples in \code{expM}
+#' that belong to "group B". The names must corresponding to column names
+#' in \code{expM}.
+#' @param emd A matrix containing a row for each gene in \code{expM}, and with
+#' the following columns:
+#' \itemize{
+#' \item \code{emd} The calculated emd score.
+#' \item \code{fc} The log2 fold change of "group A" samples relative to "group B"
+#' samples.
+#' \item \code{q-value} The calculated q-value.
+#' }
+#' The row names should specify the gene identifiers for each row.
+#' @param emd.perm A matrix containing a row for each gene in \code{expM}, and
+#' with a column containing emd scores for each random permutation calculated
+#' via \code{\link{calculate_emdexp}}.
+#' @return The function combines it's arguments in a list, which is assigned class
+#' 'emdexp'. The resulting object is returned.
+#' @seealso \code{\link{calculate_emdexp}}
+emdexp <- function(expM, samplesA, samplesB, emd, emd.perm) {
 
   structure(list("expM"=expM, "samplesA"=samplesA, "samplesB"=samplesB,
                  "emd"=emd, "emd.perm"=emd.perm),
