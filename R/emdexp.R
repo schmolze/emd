@@ -18,7 +18,33 @@ NULL
 #' @title Earth Mover's Distance for differential expression analysis
 #' @description This is the main user interface to the \pkg{emdexp} package, and is
 #' usually the only function needed.
-#' @details details go here
+#'
+#' The algorithm is used to analyze differential gene expression between two
+#' groups, referred to herein as "group A" and "group B". Traditional methods
+#' like Significance Analysis of Microarrays (SAM) and Linear Models for
+#' Microarray Data (LIMMA) use significance tests based on summary
+#' statistics (mean and standard deviation) of the two distributions. This
+#' approach tends to give non-significant results if the two distributions are
+#' highly heterogenous, which can be the case in many biological circumstances
+#' (e.g sensitive vs. resistant tumor samples).
+#'
+#' The Earth Mover's Distance algorithm instead computes the "work" needed
+#' to transform one distribution into the other, thus capturing possibly
+#' valuable information relating to the overall difference in shape between
+#' two heterogenous distributions.
+#'
+#' The EMD-based algorithm implemented in \pkg{emdexp} has two main steps.
+#' First, an expression matrix is divided into data for "group A" and "group B",
+#' and the EMD score is calculated using the two groups for each gene in the
+#' data set. Next, the labels for group A and group B are randomly permuted a
+#' specified number of times, and an EMD score for each permutation is
+#' calculated. The median of the permuted scores for each gene is used as
+#' the null distribution, and the False Discovery Rate (FDR) is computed for
+#' a range of permissive to restrictive significance thresholds. The threshold
+#' that minimizes the FDR is defined as the q-value, and is used to interpret
+#' the significance of the EMD score analogously to a p-value (e.g. q-value
+#' < 0.05 = significant.)
+#'
 #' @param expM A gene expression matrix. The rownames should contain gene
 #' identifiers, while the column names should contain sample identifiers.
 #' @param samplesA A vector of sample names identifying samples in \code{expM}
@@ -34,7 +60,17 @@ NULL
 #' @param verbose Boolean specifying whether to display progress messages.
 #' @return The function returns an \code{\link{emdexp}} object.
 #' @examples
-#' foo <- 1
+#' # 100 genes, 100 samples
+#' dat <- matrix(rnorm(10000), nrow=100, ncol=100)
+#' rownames(dat) <- paste("gene", 1:100, sep="")
+#' colnames(dat) <- paste("sample", 1:100, sep="")
+#'
+#' # "group A" = first 50, "group B" = second 50
+#' groupA <- colnames(dat)[1:50]
+#' groupB <- colnames(dat)[51:100]
+
+#' results <- calculate_emdexp(dat, groupA, groupB, nperm=10)
+#' head(results$emd)
 #' @seealso \code{\link{emdexp}} \code{\link[emdist]{emd2d}}
 calculate_emdexp <- function(expM, samplesA, samplesB, binSize=0.2,
                             nperm=100, verbose=TRUE) {
@@ -78,7 +114,7 @@ calculate_emdexp <- function(expM, samplesA, samplesB, binSize=0.2,
     log2(2^meanA/2^meanB)
   }
 
-  ## emd
+  # ---------- emd ------------
 
   # calculate emd for each gene
   if (verbose)
@@ -93,9 +129,6 @@ calculate_emdexp <- function(expM, samplesA, samplesB, binSize=0.2,
   if (verbose)
     message("done.")
 
-
-  ## fold change
-
   if (verbose)
     message("Calculating fold change...", appendLF=FALSE)
 
@@ -108,7 +141,7 @@ calculate_emdexp <- function(expM, samplesA, samplesB, binSize=0.2,
     message("done.")
 
 
-  ## emd for permuted data
+  # --------------- permuted emd scores ----------------
 
   sample_count <- length(samplesA)+length(samplesB)
 
@@ -138,7 +171,7 @@ calculate_emdexp <- function(expM, samplesA, samplesB, binSize=0.2,
 
   }
 
-  ## q-values
+  # ------------------ q-values --------------------
 
   if (verbose)
     message("Calculating q-values...", appendLF=FALSE)
@@ -188,10 +221,57 @@ calculate_emdexp <- function(expM, samplesA, samplesB, binSize=0.2,
 
 }
 
+
+#' @export
+#' @title Calculate EMD score for a single gene
+#' @details The expression data in \code{expvec} is divided into "group A"
+#' and "group B" by the identifiers given in \code{samplesA} and \code{samplesB}.
+#' The \code{\link{hist}} function is used to generate histograms for the two
+#' resulting groups, and the densities are retrieved and passed to
+#' \code{\link[emdist]{emd2d}} to compute the EMD score.
+#' @param expvec A named vector containing expression data for a single gene.
+#' @param samplesA A vector of sample names identifying samples in \code{expvec}
+#' that belong to "group A".
+#' @param samplesB A vector of sample names identifying samples in \code{expvec}
+#' that belong to "group B".
+#' @param binSize The bin size to be used when generating histograms of
+#' gene expression levels for "group A" and "group B".
+#' @return The emd score is returned.
+#' @examples
+#' # 100 samples
+#' vec <- rnorm(100)
+#' names(vec) <- paste("sample", 1:100, sep="")
+#'
+#' # "group A" = first 50, "group B" = second 50
+#' groupA <- names(vec)[1:50]
+#' groupB <- names(vec)[51:100]
+#'
+#' calculate_emdexp_gene(vec, groupA, groupB)
+#' @seealso \code{\link[emdist]{emd2d}}
+calculate_emdexp_gene <- function(expvec, samplesA, samplesB, binSize=0.2) {
+
+  dataA <- expvec[samplesA]
+  dataB <- expvec[samplesB]
+
+  bins <- seq(floor(min(c(dataA, dataB))),
+              ceiling(max(c(dataA, dataB))),
+              by=binSize )
+
+  histA <- hist(dataA, breaks=bins, plot=FALSE)
+  histB <- hist(dataB, breaks=bins, plot=FALSE)
+
+  densA <- as.matrix(histA$density)
+  densB <- as.matrix(histB$density)
+
+  emdist::emd2d(densA, densB)
+
+}
+
+
 #' @export
 #' @title Create an emdexp object
 #' @description This is the constructor for objects of class 'emdexp'. It
-#' is used in \code{\link{calculate_emd}} to construct the return value.
+#' is used in \code{\link{calculate_emdexp}} to construct the return value.
 #' @param expM A gene expression matrix. The rownames should contain gene
 #' identifiers, while the column names should contain sample identifiers.
 #' @param samplesA A vector of sample names identifying samples in \code{expM}

@@ -37,7 +37,7 @@ The function combines it's arguments in a list, which is assigned class
 }
 \description{
 This is the constructor for objects of class 'emdexp'. It
-is used in \code{\link{calculate_emd}} to construct the return value.
+is used in \code{\link{calculate_emdexp}} to construct the return value.
 }
 \seealso{
 \code{\link{calculate_emdexp}}

@@ -1,13 +1,25 @@
 #' @export
-#' @title Plot null distribution of permuted emd scores vs. calculated emd
+#' @title Plot null distribution of permuted EMD scores vs. calculated EMD
 #' scores.
-#' @description The median of the randomly permuted emd scores (i.e. the null
-#' distribution) is plotted on the x-axis, vs. the observed emd scores on the
+#' @description The median of the randomly permuted EMD scores (i.e. the null
+#' distribution) is plotted on the x-axis, vs. the observed EMD scores on the
 #' y-axis. The line \code{y=x} is superimposed.
 #' @param emdexp An \code{\link{emdexp}} object, typically returned via a call
 #' to \code{\link{calculate_emdexp}}.
 #' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
 #' not assigned, a plot will be drawn.
+#' @examples
+#' # 100 genes, 100 samples
+#' dat <- matrix(rnorm(10000), nrow=100, ncol=100)
+#' rownames(dat) <- paste("gene", 1:100, sep="")
+#' colnames(dat) <- paste("sample", 1:100, sep="")
+#'
+#' # "group A" = first 50, "group B" = second 50
+#' groupA <- colnames(dat)[1:50]
+#' groupB <- colnames(dat)[51:100]
+#'
+#' results <- calculate_emdexp(dat, groupA, groupB, nperm=10)
+#' plot_emdnull(results)
 #' @seealso \code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
 plot_emdnull <- function(emdexp) {
 
@@ -32,13 +44,25 @@ plot_emdnull <- function(emdexp) {
 
 
 #' @export
-#' @title Plot histogram of emd values calculated via random permutation.
-#' @description The permuted emd scores stored in \code{emdexp$emd.perm} are
+#' @title Plot histogram of EMD scores calculated via random permutation.
+#' @description The permuted EMD scores stored in \code{emdexp$emd.perm} are
 #' plotted as a histogram.
 #' @param emdexp An \code{\link{emdexp}} object, typically returned via a call
 #' to \code{\link{calculate_emdexp}}.
 #' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
 #' not assigned, a plot will be drawn.
+#' @examples
+#' # 100 genes, 100 samples
+#' dat <- matrix(rnorm(10000), nrow=100, ncol=100)
+#' rownames(dat) <- paste("gene", 1:100, sep="")
+#' colnames(dat) <- paste("sample", 1:100, sep="")
+#'
+#' # "group A" = first 50, "group B" = second 50
+#' groupA <- colnames(dat)[1:50]
+#' groupB <- colnames(dat)[51:100]
+#'
+#' results <- calculate_emdexp(dat, groupA, groupB, nperm=10)
+#' plot_perms(results)
 #' @seealso \code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
 plot_perms <- function(emdexp) {
 
@@ -58,11 +82,11 @@ plot_perms <- function(emdexp) {
 
 
 #' @export
-#' @title Plot expression distributions and emd score for a gene.
+#' @title Plot expression distributions and EMD score for a gene.
 #' @description The expression data for the specified gene is retrieved from
 #' \code{emdexp$emd}. \code{emdexp$samplesA} and \code{emdexp$samplesB} are used
 #' to divide the data into two distributions, which are then visualized as
-#' density distributions. The calculated emd score for the specified gene is
+#' density distributions. The calculated EMD score for the specified gene is
 #' displayed in the plot title.
 #' @param emdexp An \code{\link{emdexp}} object, typically returned via a call
 #' to \code{\link{calculate_emdexp}}.
@@ -70,6 +94,18 @@ plot_perms <- function(emdexp) {
 #' name in \code{emdexp$emd}.
 #' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
 #' not assigned, a plot will be drawn.
+#' @examples
+#' # 100 genes, 100 samples
+#' dat <- matrix(rnorm(10000), nrow=100, ncol=100)
+#' rownames(dat) <- paste("gene", 1:100, sep="")
+#' colnames(dat) <- paste("sample", 1:100, sep="")
+#'
+#' # "group A" = first 50, "group B" = second 50
+#' groupA <- colnames(dat)[1:50]
+#' groupB <- colnames(dat)[51:100]
+#'
+#' results <- calculate_emdexp(dat, groupA, groupB, nperm=10)
+#' plot_density(results, "gene5")
 #' @seealso \code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
 plot_density <- function(emdexp, gene_name) {
 

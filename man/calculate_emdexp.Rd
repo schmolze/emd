@@ -32,12 +32,44 @@ The function returns an \code{\link{emdexp}} object.
 \description{
 This is the main user interface to the \pkg{emdexp} package, and is
 usually the only function needed.
-}
-\details{
-details go here
+
+The algorithm is used to analyze differential gene expression between two
+groups, referred to herein as "group A" and "group B". Traditional methods
+like Significance Analysis of Microarrays (SAM) and Linear Models for
+Microarray Data (LIMMA) use significance tests based on summary
+statistics (mean and standard deviation) of the two distributions. This
+approach tends to give non-significant results if the two distributions are
+highly heterogenous, which can be the case in many biological circumstances
+(e.g sensitive vs. resistant tumor samples).
+
+The Earth Mover's Distance algorithm instead computes the "work" needed
+to transform one distribution into the other, thus capturing possibly
+valuable information relating to the overall difference in shape between
+two heterogenous distributions.
+
+The EMD-based algorithm implemented in \pkg{emdexp} has two main steps.
+First, an expression matrix is divided into data for "group A" and "group B",
+and the EMD score is calculated using the two groups for each gene in the
+data set. Next, the labels for group A and group B are randomly permuted a
+specified number of times, and an EMD score for each permutation is
+calculated. The median of the permuted scores for each gene is used as
+the null distribution, and the False Discovery Rate (FDR) is computed for
+a range of permissive to restrictive significance thresholds. The threshold
+that minimizes the FDR is defined as the q-value, and is used to interpret
+the significance of the EMD score analogously to a p-value (e.g. q-value
+< 0.05 = significant.)
 }
 \examples{
-foo <- 1
+# 100 genes, 100 samples
+dat <- matrix(rnorm(10000), nrow=100, ncol=100)
+rownames(dat) <- paste("gene", 1:100, sep="")
+colnames(dat) <- paste("sample", 1:100, sep="")
+
+# "group A" = first 50, "group B" = second 50
+groupA <- colnames(dat)[1:50]
+groupB <- colnames(dat)[51:100]
+results <- calculate_emdexp(dat, groupA, groupB, nperm=10)
+head(results$emd)
 }
 \seealso{
 \code{\link{emdexp}} \code{\link[emdist]{emd2d}}
