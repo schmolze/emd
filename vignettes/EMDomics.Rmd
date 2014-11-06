@@ -1,5 +1,5 @@
 ---
-title: "emdexp Vignette"
+title: "EMDomics Vignette"
 author: "Daniel Schmolze"
 date: "`r Sys.Date()`"
 output: 
@@ -7,18 +7,18 @@ output:
     fig_width: 7
     fig_height: 5
 vignette: >
-  %\VignetteIndexEntry{emdexp Vignette}
+  %\VignetteIndexEntry{EMDomics Vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
 ---
 ---
 # Welcome
 
-Welcome to the **emdexp** package! This vignette will explain the functionality of the package through the creation and analysis of a toy data set.
+Welcome to the **EMDomics** package! This vignette will explain the functionality of the package through the creation and analysis of a toy data set.
 
 # Earth Mover's Distance
 
-**emdexp** analyzes differential gene expression between two groups. In a real experiment, the two groups might be test vs. control, sensitive vs. resistant, etc., but here we'll just call them "group A" and "group B". Typically you'll be analyzing expression across multiple genes, but we'll start with a single gene to get a feel for how the Earth Mover's Distance (EMD) algorithm works.
+**EMDomics** analyzes differences in genomics data between two groups. Typically the data will be gene expression levels from array- or sequence-based experiments, but other scenarios are possible. In a real experiment, the two groups might be test vs. control, sensitive vs. resistant, etc., but here we'll just call them "group A" and "group B". Typically you'll be analyzing differences across multiple genes, but we'll start with a single gene to get a feel for how the Earth Mover's Distance (EMD) algorithm works.
 
 We'll create a vector of expression data for 100 samples, and we'll call the first 50 samples "group A" and the second 50 "group B":
 
@@ -40,11 +40,11 @@ df$group[51:100] <- "B"
 ggplot(df, aes(exp_data, fill=group)) + geom_density(alpha=0.5)
 ```
 
-We shouldn't expect the two groups to look too different, since we're just sampling from the normal distribution. Intuitively, the "work" required to transform one distribution into the other should be low. We can calculate the EMD score for this single gene using the function `calculate_emdexp_gene`:
+We shouldn't expect the two groups to look too different, since we're just sampling from the normal distribution. Intuitively, the "work" required to transform one distribution into the other should be low. We can calculate the EMD score for this single gene using the function `calculate_emd_gene`:
 
 ```{r}
-library(emdexp)
-calculate_emdexp_gene(exp_data, groupA, groupB)
+library(EMDomics)
+calculate_emd_gene(exp_data, groupA, groupB)
 ```
 
 Now we'll modify the expression data for `group A` and see how the EMD score changes. We'll randomly add or subtract 2 from each data point in `group A`:
@@ -63,16 +63,16 @@ df$group[1:50] <- "A"
 df$group[51:100] <- "B"
 ggplot(df, aes(exp_data2, fill=group)) + geom_density(alpha=0.5)
 
-calculate_emdexp_gene(exp_data2, groupA, groupB)
+calculate_emd_gene(exp_data2, groupA, groupB)
 ```
 
 The EMD score is larger, reflecting the increased work needed to transform one distribution into the other.
 
 # Analyzing Significance
 
-The EMD score increases as the two distributions become increasingly dissimilar, but we have no framework for estimating the significance of a particular EMD score. **emdexp** uses a permutation-based method to calculate a q-value that is interpreted analogously to a p-value. To access the full functionality of the package, we'll use the function `calculate_emdexp`. 
+The EMD score increases as the two distributions become increasingly dissimilar, but we have no framework for estimating the significance of a particular EMD score. **EMDomics** uses a permutation-based method to calculate a q-value that is interpreted analogously to a p-value. To access the full functionality of the package, we'll use the function `calculate_emd`. 
 
-We'll first create a matrix of gene expression data for 100 samples (tumors, patients, etc.) and 100 genes. We'll just sample from the normal distribution for now. The first 50 samples will be our "group A", and the second fifty will be "group B".
+We'll first create a matrix of gene expression data for 100 samples (tumors, patients, etc.) and 100 genes. We'll just sample from the normal distribution for now. The first 50 samples will be our "group A", and the second 50 will be "group B".
 
 ```{r}
 data <- matrix(rnorm(10000), nrow=100, ncol=100)
@@ -83,11 +83,11 @@ groupA <- colnames(data)[1:50]
 groupB <- colnames(data)[51:100]
 ```
 
-Now we can call `calculate_emdexp`. We'll only use 10 permutations for the purposes of this vignette, but in actual experiments using at least 100 permutations is advised.
+Now we can call `calculate_emd`. We'll only use 10 permutations for the purposes of this vignette, but in actual experiments using at least 100 permutations is advised.
 
 
 ```{r, message=FALSE}
-results <- calculate_emdexp(data, groupA, groupB, nperm=10)
+results <- calculate_emd(data, groupA, groupB, nperm=10)
 ```
 
 Most of the time, you'll be interested in the `emd` matrix returned as a member of the return object:
@@ -97,7 +97,7 @@ emd <- results$emd
 head(emd)
 ```
 
-This matrix lists the emd score, the fold change, and the q-value for each gene in the data set. Because we're not analyzing many genes and the data is randomly generated, there will likely be some significant q-values in the results simply by chance. We can order the `emd` matrix by q-value:
+This matrix lists the emd score, the fold change (defined as log2(2^meanA^/2^meanB^)), and the q-value for each gene in the data set. Because we're not analyzing many genes and the data is randomly generated, there will likely be some significant q-values in the results simply by chance. We can order the `emd` matrix by q-value:
 
 ```{r}
 emd2 <- emd[(order(emd[,"q-value"])),]
@@ -108,7 +108,7 @@ Note the correlation of significant q-values with relatively large EMD scores an
 
 # Visualization
 
-**emdexp** includes a few visualization functions. The function `plot_density` will display the density distributions of "group A" and "group B" for a given gene, along with the EMD score. We can compare the gene with the largest EMD score and the gene with the smallest EMD score, for example:
+**EMDomics** includes a few visualization functions. The function `plot_density` will display the density distributions of "group A" and "group B" for a given gene, along with the EMD score. We can compare the gene with the largest EMD score and the gene with the smallest EMD score, for example:
 
 ```{r}
 emd3 <- emd[(order(emd[,"emd"])),]
@@ -137,4 +137,4 @@ plot_emdnull(results)
 
 # Wrapping Up
 
-This concludes the **emdist** vignette. For additional information, please consult the reference manual.
+This concludes the **EMDomics** vignette. For additional information, please consult the reference manual.

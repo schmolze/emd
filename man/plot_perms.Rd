@@ -3,18 +3,18 @@
 \alias{plot_perms}
 \title{Plot histogram of EMD scores calculated via random permutation.}
 \usage{
-plot_perms(emdexp)
+plot_perms(emdobj)
 }
 \arguments{
-\item{emdexp}{An \code{\link{emdexp}} object, typically returned via a call
-to \code{\link{calculate_emdexp}}.}
+\item{emdobj}{An \code{\link{emdomics}} object, typically returned via a call
+to \code{\link{calculate_emd}}.}
 }
 \value{
 A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
 not assigned, a plot will be drawn.
 }
 \description{
-The permuted EMD scores stored in \code{emdexp$emd.perm} are
+The permuted EMD scores stored in \code{emdobj$emd.perm} are
 plotted as a histogram.
 }
 \examples{
@@ -27,10 +27,10 @@ colnames(dat) <- paste("sample", 1:100, sep="")
 groupA <- colnames(dat)[1:50]
 groupB <- colnames(dat)[51:100]
 
-results <- calculate_emdexp(dat, groupA, groupB, nperm=10)
+results <- calculate_emd(dat, groupA, groupB, nperm=10)
 plot_perms(results)
 }
 \seealso{
-\code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
+\code{\link{calculate_emd}} \code{\link[ggplot2]{ggplot}}
 }
 

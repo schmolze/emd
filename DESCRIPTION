@@ -1,6 +1,20 @@
-Package: emdexp
-Title: Earth Mover's Distance
-Description: Description goes here...
+Package: EMDomics
+Title: Earth Mover's Distance for Differential Analysis of Genomics Data
+Description: The algorithm is used to compare continuous genomics data between
+    two groups. Usually the data will be gene expression values from
+    array-based or sequence-based experiments, but data from other types of
+    experiments can also be analyzed (e.g. copy number variation). Traditional
+    methods like Significance Analysis of Microarrays (SAM) and Linear Models
+    for Microarray Data (LIMMA) use significance tests based on summary
+    statistics (mean and standard deviation) of the two distributions. This
+    approach tends to give non-significant results if the two distributions are
+    highly heterogeneous, which can be the case in many biological
+    circumstances (e.g sensitive vs. resistant tumor samples). The Earth
+    Mover's Distance (EMD) algorithm instead computes the "work" needed to
+    transform one distribution into the other, thus capturing possibly valuable
+    information relating to the overall difference in shape between two
+    heterogeneous distributions. A permutation-based method is used to generate
+    a q-value and interpret the significance of EMD scores.
 Version: 0.99.0
 Authors@R: c(
     person("Daniel", "Schmolze",

@@ -4,11 +4,11 @@
 \title{Plot null distribution of permuted EMD scores vs. calculated EMD
 scores.}
 \usage{
-plot_emdnull(emdexp)
+plot_emdnull(emdobj)
 }
 \arguments{
-\item{emdexp}{An \code{\link{emdexp}} object, typically returned via a call
-to \code{\link{calculate_emdexp}}.}
+\item{emdobj}{An \code{\link{emdomics}} object, typically returned via a call
+to \code{\link{calculate_emd}}.}
 }
 \value{
 A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
@@ -29,10 +29,10 @@ colnames(dat) <- paste("sample", 1:100, sep="")
 groupA <- colnames(dat)[1:50]
 groupB <- colnames(dat)[51:100]
 
-results <- calculate_emdexp(dat, groupA, groupB, nperm=10)
+results <- calculate_emd(dat, groupA, groupB, nperm=10)
 plot_emdnull(results)
 }
 \seealso{
-\code{\link{calculate_emdexp}} \code{\link[ggplot2]{ggplot}}
+\code{\link{calculate_emd}} \code{\link[ggplot2]{ggplot}}
 }
 
