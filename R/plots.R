@@ -4,7 +4,7 @@
 #' @description The median of the randomly permuted EMD scores (i.e. the null
 #' distribution) is plotted on the x-axis, vs. the observed EMD scores on the
 #' y-axis. The line \code{y=x} is superimposed.
-#' @param emdobj An \code{\link{emdomics}} object, typically returned via a call
+#' @param emdobj An \code{\link{EMDomics}} object, typically returned via a call
 #' to \code{\link{calculate_emd}}.
 #' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
 #' not assigned, a plot will be drawn.
@@ -47,7 +47,7 @@ plot_emdnull <- function(emdobj) {
 #' @title Plot histogram of EMD scores calculated via random permutation.
 #' @description The permuted EMD scores stored in \code{emdobj$emd.perm} are
 #' plotted as a histogram.
-#' @param emdobj An \code{\link{emdomics}} object, typically returned via a call
+#' @param emdobj An \code{\link{EMDomics}} object, typically returned via a call
 #' to \code{\link{calculate_emd}}.
 #' @return A \code{\link[ggplot2]{ggplot}} object is returned. If the value is
 #' not assigned, a plot will be drawn.
@@ -88,7 +88,7 @@ plot_perms <- function(emdobj) {
 #' to divide the data into two distributions, which are then visualized as
 #' density distributions. The calculated EMD score for the specified gene is
 #' displayed in the plot title.
-#' @param emdobj An \code{\link{emdomics}} object, typically returned via a call
+#' @param emdobj An \code{\link{EMDomics}} object, typically returned via a call
 #' to \code{\link{calculate_emd}}.
 #' @param gene_name The gene to visualize. The name should be defined as a row
 #' name in \code{emdobj$emd}.

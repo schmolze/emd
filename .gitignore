@@ -11,3 +11,15 @@ R/.Rhistory
 
 .Rhistory
 .Rproj.user
+
+*.Rd
+
+man/calculate_emd.Rd
+
+man/emdomics-package.Rd
+
+man/plot_density.Rd
+
+man/plot_emdnull.Rd
+
+man/plot_perms.Rd

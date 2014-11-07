@@ -1,5 +1,4 @@
-#' Implements the Earth Mover's Distance algorithm for differential analysis
-#' of genomics data.
+#' Earth Mover's Distance algorithm for differential analysis of genomics data.
 #'
 #' \code{\link{calculate_emd}} will usually be the only function needed.
 #'
@@ -46,6 +45,10 @@ NULL
 #' that minimizes the FDR is defined as the q-value, and is used to interpret
 #' the significance of the EMD score analogously to a p-value (e.g. q-value
 #' < 0.05 = significant.)
+#'
+#' Note that q-values of 0 are adjusted to 1/(nperm+1). For this reason, the
+#' \code{nperm} parameter should not be too low (the default of 100 is
+#' reasonable).
 #'
 #' @param data A matrix containing genomics data (e.g. gene expression levels).
 #' The rownames should contain gene identifiers, while the column names should
@@ -213,6 +216,9 @@ calculate_emd <- function(data, samplesA, samplesB, binSize=0.2,
 
   emd.qval <- as.matrix(emd.qval)
   colnames(emd.qval) <- "q-value"
+
+  # adjust q-values of 0 to 1/(nperm+1)
+  emd.qval[emd.qval == 0] <- 1/(nperm+1)
 
   if (verbose)
     message("done.")
