@@ -68,6 +68,9 @@ plot_perms <- function(emdobj) {
 
   emd.perm <- as.data.frame(emdobj$emd.perm)
 
+  # to appease CRAN
+  x <- NULL
+
   colnames(emd.perm) <- "x"
 
   title <- "Histogram of permuted emd scores"
@@ -117,6 +120,9 @@ plot_density <- function(emdobj, gene_name) {
 
   dfA <- as.data.frame(data[gene_name, samplesA])
   dfB <- as.data.frame(data[gene_name, samplesB])
+
+  # to appease CRAN
+  group <- NULL
 
   dfA$group <- "A"
   dfB$group <- "B"

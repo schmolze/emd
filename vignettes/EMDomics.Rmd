@@ -97,7 +97,7 @@ emd <- results$emd
 head(emd)
 ```
 
-This matrix lists the emd score, the fold change (defined as log2(2^meanA^/2^meanB^)), and the q-value for each gene in the data set. Because we're not analyzing many genes and the data is randomly generated, there will likely be some significant q-values in the results simply by chance. We can order the `emd` matrix by q-value:
+This matrix lists the emd score, the fold change (defined as log2(2^meanA^/2^meanB^)), and the q-value for each gene in the data set. Because we're not analyzing many genes and the data is randomly generated, there mqy be some significant q-values in the results simply by chance. We can order the `emd` matrix by q-value:
 
 ```{r}
 emd2 <- emd[(order(emd[,"q-value"])),]

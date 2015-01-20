@@ -23,3 +23,9 @@ man/plot_density.Rd
 man/plot_emdnull.Rd
 
 man/plot_perms.Rd
+
+*.history
+
+vignettes/figure/unnamed-chunk-2.png
+
+vignettes/figure/unnamed-chunk-5.png
